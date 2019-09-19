@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package formatters
 
 import (
@@ -51,3 +57,4 @@ func FormatArray(value interface{}) string {
 	}
 	return ""
 }
+

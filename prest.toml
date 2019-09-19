@@ -1,0 +1,8 @@
+[pg]
+host = "192.168.250.50"
+user = "beyondb"
+pass = "123456"
+port = 1328
+database = "postgres"
+
+

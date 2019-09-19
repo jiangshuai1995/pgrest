@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package postgres
 
 import (
@@ -19,12 +25,12 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/nuveo/log"
-	"jiang/adapters"
-	"jiang/adapters/postgres/formatters"
-	"jiang/adapters/postgres/internal/connection"
-	"jiang/adapters/postgres/statements"
-	"jiang/adapters/scanner"
-	"jiang/config"
+	"pgrest/adapters"
+	"pgrest/adapters/postgres/formatters"
+	"pgrest/adapters/postgres/statements"
+	"pgrest/adapters/scanner"
+	"pgrest/config"
+	"pgrest/connection"
 )
 
 //Postgres adapter postgresql
@@ -1391,3 +1397,4 @@ func (adapter *Postgres) SchemaTablesOrderBy(order string) (orderBy string) {
 	}
 	return
 }
+

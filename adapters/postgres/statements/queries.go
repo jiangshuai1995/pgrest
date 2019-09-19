@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package statements
 
 import "fmt"
@@ -132,3 +138,4 @@ var (
 	// Schemas default query
 	Schemas = fmt.Sprintf(SchemasSelect, FieldSchemaName) + fmt.Sprintf(SchemasOrderBy, FieldSchemaName)
 )
+

@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package connection
 
 import (
@@ -5,7 +11,7 @@ import (
 	"sync"
 
 	"github.com/jmoiron/sqlx"
-	"jiang/config"
+	"pgrest/config"
 	// Used pg drive on sqlx
 	_ "github.com/lib/pq"
 )

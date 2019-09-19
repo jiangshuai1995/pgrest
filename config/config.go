@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package config
 
 import (
@@ -8,10 +14,9 @@ import (
 	"strconv"
 	"strings"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/nuveo/log"
-	"jiang/adapters"
 	"github.com/spf13/viper"
+	"pgrest/adapters"
 )
 
 // TablesConf informations
@@ -91,7 +96,7 @@ func viperCfg() {
 	viper.SetDefault("pg.maxopenconn", 10)
 	viper.SetDefault("pg.conntimeout", 10)
 	viper.SetDefault("debug", false)
-	viper.SetDefault("jwt.default", true)
+	viper.SetDefault("jwt.default", false)
 	viper.SetDefault("jwt.algo", "HS256")
 	viper.SetDefault("cors.allowheaders", []string{"*"})
 	viper.SetDefault("cache.enable", true)
@@ -99,7 +104,7 @@ func viperCfg() {
 	viper.SetDefault("https.mode", false)
 	viper.SetDefault("https.cert", "/etc/certs/cert.crt")
 	viper.SetDefault("https.key", "/etc/certs/cert.key")
-	hDir, err := homedir.Dir()
+	hDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatal(err)
 
@@ -240,3 +245,4 @@ func portFromEnv(cfg *Prest) (err error) {
 	cfg.HTTPPort = HTTPPort
 	return
 }
+

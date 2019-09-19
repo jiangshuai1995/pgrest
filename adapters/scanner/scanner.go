@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package scanner
 
 import (
@@ -107,3 +113,6 @@ func (p *PrestScanner) Err() (err error) {
 	err = p.Error
 	return
 }
+
+
+

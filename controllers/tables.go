@@ -2,20 +2,22 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/kataras/iris"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
-	"jiang/adapters"
-	"jiang/config"
+	"pgrest/adapters"
+	"pgrest/config"
 )
 
 // GetTables list all (or filter) tables
-func GetTables(w http.ResponseWriter, r *http.Request) {
+func GetTables(ctx iris.Context) {
+	r := ctx.Request()
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	requestWhere = config.PrestConf.Adapter.TableWhere(requestWhere)
@@ -23,7 +25,7 @@ func GetTables(w http.ResponseWriter, r *http.Request) {
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform OrderByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	order = config.PrestConf.Adapter.TableOrderBy(order)
@@ -32,7 +34,7 @@ func GetTables(w http.ResponseWriter, r *http.Request) {
 
 	distinct, err := config.PrestConf.Adapter.DistinctClause(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if distinct != "" {
@@ -43,42 +45,55 @@ func GetTables(w http.ResponseWriter, r *http.Request) {
 
 	sc := config.PrestConf.Adapter.Query(sqlTables, values...)
 	if sc.Err() != nil {
-		http.Error(w, sc.Err().Error(), http.StatusBadRequest)
+		//http.Error(w, sc.Err().Error(), http.StatusBadRequest)
 		return
 	}
-	w.Write(sc.Bytes())
+	ctx.Write(sc.Bytes())
 }
 
 // GetTablesByDatabaseAndSchema list all (or filter) tables based on database and schema
-func GetTablesByDatabaseAndSchema(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	database := vars["database"]
-	schema := vars["schema"]
-
+func GetTablesByDatabaseAndSchema(ctx iris.Context) {
+	r:=ctx.Request()
+	database := ctx.Params().Get("database")
+	schema := ctx.Params().Get("schema")
 	config.PrestConf.Adapter.SetDatabase(database)
-
+	queries := r.URL.Query()
+	countQuery := queries.Get("_count")
+	fmt.Println(countQuery)
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 3)
 	if err != nil {
+
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	requestWhere = config.PrestConf.Adapter.SchemaTablesWhere(requestWhere)
-
-	sqlSchemaTables := config.PrestConf.Adapter.SchemaTablesClause()
+	sqlSchemaTables:=""
+	if countQuery != "" {
+		sqlSchemaTables =
+			`SELECT
+			count(*)
+		FROM
+		pg_catalog.pg_tables t
+		INNER JOIN
+		information_schema.schemata sc ON sc.schema_name = t.schemaname`
+	}else{
+		sqlSchemaTables = config.PrestConf.Adapter.SchemaTablesClause()
+	}
+	//sqlSchemaTables := config.PrestConf.Adapter.SchemaTablesClause()
 
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform OrderByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	order = config.PrestConf.Adapter.SchemaTablesOrderBy(order)
+	//order = config.PrestConf.Adapter.SchemaTablesOrderBy(order)
 
 	page, err := config.PrestConf.Adapter.PaginateIfPossible(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform PaginateIfPossible: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -90,37 +105,37 @@ func GetTablesByDatabaseAndSchema(w http.ResponseWriter, r *http.Request) {
 	valuesAux = append(valuesAux, values...)
 	sc := config.PrestConf.Adapter.Query(sqlSchemaTables, valuesAux...)
 	if sc.Err() != nil {
-		http.Error(w, sc.Err().Error(), http.StatusBadRequest)
+		//http.Error(w, sc.Err().Error(), http.StatusBadRequest)
 		return
 	}
-	w.Write(sc.Bytes())
+	ctx.Write(sc.Bytes())
 }
 
 // SelectFromTables perform select in database
-func SelectFromTables(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	database := vars["database"]
-	schema := vars["schema"]
-	table := vars["table"]
+func SelectFromTables(ctx iris.Context) {
+	r:=ctx.Request()
+	database := ctx.Params().Get("database")
+	schema := ctx.Params().Get("schema")
+	table := ctx.Params().Get("table")
 
 	config.PrestConf.Adapter.SetDatabase(database)
 
 	// get selected columns, "*" if empty "_columns"
 	cols, err := config.PrestConf.Adapter.FieldsPermissions(r, table, "read")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if len(cols) == 0 {
-		err := fmt.Errorf("you don't have permission for this action, please check the permitted fields for this table")
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//err := fmt.Errorf("you don't have permission for this action, please check the permitted fields for this table")
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	selectStr, err := config.PrestConf.Adapter.SelectFields(cols)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	query := config.PrestConf.Adapter.SelectSQL(selectStr, database, schema, table)
@@ -128,7 +143,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	countQuery, err := config.PrestConf.Adapter.CountByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform CountByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if countQuery != "" {
@@ -138,7 +153,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	joinValues, err := config.PrestConf.Adapter.JoinByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform JoinByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -149,7 +164,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -170,7 +185,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform OrderByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if order != "" {
@@ -180,7 +195,7 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 	page, err := config.PrestConf.Adapter.PaginateIfPossible(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform PaginateIfPossible: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	sqlSelect = fmt.Sprint(sqlSelect, " ", page)
@@ -195,13 +210,13 @@ func SelectFromTables(w http.ResponseWriter, r *http.Request) {
 		errorMessage := sc.Err().Error()
 		if errorMessage == fmt.Sprintf(`pq: relation "%s.%s" does not exist`, schema, table) {
 			fmt.Println(errorMessage)
-			http.Error(w, errorMessage, http.StatusNotFound)
+			//http.Error(w, errorMessage, http.StatusNotFound)
 			return
 		}
-		http.Error(w, errorMessage, http.StatusBadRequest)
+		//http.Error(w, errorMessage, http.StatusBadRequest)
 		return
 	}
-	w.Write(sc.Bytes())
+	ctx.Write(sc.Bytes())
 }
 
 // InsertInTables perform insert in specific table

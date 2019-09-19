@@ -1,3 +1,9 @@
+/*
+
+@Time : 2019/9/16
+@Author : Jiangs
+
+*/
 package adapters
 
 import (
@@ -18,9 +24,7 @@ type Adapter interface {
 	DeleteWithTransaction(tx *sql.Tx, SQL string, params ...interface{}) (sc Scanner)
 	DeleteSQL(database string, schema string, table string) string
 	DistinctClause(r *http.Request) (distinctQuery string, err error)
-	//ExecuteScripts(method, sql string, values []interface{}) (sc Scanner)
 	FieldsPermissions(r *http.Request, table string, op string) (fields []string, err error)
-	//GetScript(verb, folder, scriptName string) (script string, err error)
 	GroupByClause(r *http.Request) (groupBySQL string)
 	Insert(SQL string, params ...interface{}) (sc Scanner)
 	InsertWithTransaction(tx *sql.Tx, SQL string, params ...interface{}) (sc Scanner)
@@ -30,7 +34,6 @@ type Adapter interface {
 	PaginateIfPossible(r *http.Request) (paginatedQuery string, err error)
 	ParseBatchInsertRequest(r *http.Request) (colsName string, colsValue string, values []interface{}, err error)
 	ParseInsertRequest(r *http.Request) (colsName string, colsValue string, values []interface{}, err error)
-	//ParseScript(scriptPath string, queryURL url.Values) (sqlQuery string, values []interface{}, err error)
 	Query(SQL string, params ...interface{}) (sc Scanner)
 	QueryCount(SQL string, params ...interface{}) (sc Scanner)
 	ReturningByRequest(r *http.Request) (returningSyntax string, err error)
@@ -52,3 +55,11 @@ type Adapter interface {
 	UpdateSQL(database string, schema string, table string, setSyntax string) string
 	WhereByRequest(r *http.Request, initialPlaceholderID int) (whereSyntax string, values []interface{}, err error)
 }
+
+// Scanner interface to enable map pREST result to a struct
+type Scanner interface {
+	Scan(interface{}) (int, error)
+	Bytes() []byte
+	Err() error
+}
+

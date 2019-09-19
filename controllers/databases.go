@@ -2,27 +2,27 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
+	"github.com/kataras/iris"
 	"strings"
 
-	"jiang/config"
+	"pgrest/config"
 )
 
 // GetDatabases list all (or filter) databases
-func GetDatabases(w http.ResponseWriter, r *http.Request) {
+func GetDatabases(ctx iris.Context) {
+	r := ctx.Request()
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	requestWhere = config.PrestConf.Adapter.DatabaseWhere(requestWhere)
 
 	query, hasCount := config.PrestConf.Adapter.DatabaseClause(r)
 	sqlDatabases := fmt.Sprint(query, requestWhere)
-
 	distinct, err := config.PrestConf.Adapter.DistinctClause(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if distinct != "" {
@@ -31,7 +31,7 @@ func GetDatabases(w http.ResponseWriter, r *http.Request) {
 
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	order = config.PrestConf.Adapter.DatabaseOrderBy(order, hasCount)
@@ -40,15 +40,15 @@ func GetDatabases(w http.ResponseWriter, r *http.Request) {
 
 	page, err := config.PrestConf.Adapter.PaginateIfPossible(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	sqlDatabases = fmt.Sprint(sqlDatabases, " ", page)
 	sc := config.PrestConf.Adapter.Query(sqlDatabases, values...)
 	if sc.Err() != nil {
-		http.Error(w, sc.Err().Error(), http.StatusBadRequest)
+		//http.Error(w, sc.Err().Error(), http.StatusBadRequest)
 		return
 	}
-	w.Write(sc.Bytes())
+	ctx.Write(sc.Bytes())
 }
