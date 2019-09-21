@@ -7,6 +7,7 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
 	jwtmiddleware "github.com/iris-contrib/middleware/jwt"
 	"github.com/kataras/iris"
@@ -61,4 +62,19 @@ func Logs() (customLogger  iris.Handler){
 		//MessageHeaderKeys: []string{"User-Agent"},
 	})
 	return
+}
+
+func FormatMiddleware() iris.Handler{
+	return func(ctx iris.Context) {
+		var result []byte
+		//ctx.ResponseWriter().Header().Set("Content-Type", "application/json")
+		if ctx.GetStatusCode() >= 400 {
+			m := make(map[string]string)
+			m["error"] = strings.TrimSpace(string(ctx.Recorder().Body()))
+			result, _ = json.MarshalIndent(m, "", "\t")
+			ctx.Recorder().ResetBody()
+			ctx.Recorder().ResponseWriter.Write(result)
+		}
+		//ctx.Next()
+	}
 }

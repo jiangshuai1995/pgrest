@@ -20,12 +20,14 @@ func main() {
 	postgres.Load()
 
 	app:=middlewares.GetApp()
+	app.Done(middlewares.FormatMiddleware())
 	app.Get("/version", Versionhandler)
 	app.Get("/databases",controllers.GetDatabases)
 	app.Get("/schemas",controllers.GetSchemas)
 	app.Get("/tables",controllers.GetTables)
 	app.Get("/{database}/{schema}",controllers.GetTablesByDatabaseAndSchema)
 	app.Get("/{database}/{schema}/{table}",controllers.SelectFromTables)
+
 	app.Run(iris.Addr(":9000"))
 
 }

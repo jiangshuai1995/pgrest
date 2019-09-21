@@ -48,7 +48,13 @@ func GetTables(ctx iris.Context) {
 		//http.Error(w, sc.Err().Error(), http.StatusBadRequest)
 		return
 	}
+	ctx.Header("Content-Type", "application/json")
+	fmt.Println(ctx.GetContentType())
+	fmt.Println(ctx.GetHeader("Content-Type"))
 	ctx.Write(sc.Bytes())
+	ctx.ResponseWriter().Header().Add("Content-Type", "application/json")
+	fmt.Println(ctx.GetContentType())
+	fmt.Println(ctx.GetHeader("Content-Type"))
 }
 
 // GetTablesByDatabaseAndSchema list all (or filter) tables based on database and schema
@@ -64,6 +70,9 @@ func GetTablesByDatabaseAndSchema(ctx iris.Context) {
 	if err != nil {
 
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -85,6 +94,9 @@ func GetTablesByDatabaseAndSchema(ctx iris.Context) {
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform OrderByRequest: %v", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -93,6 +105,9 @@ func GetTablesByDatabaseAndSchema(ctx iris.Context) {
 	page, err := config.PrestConf.Adapter.PaginateIfPossible(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform PaginateIfPossible: %v", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -105,10 +120,15 @@ func GetTablesByDatabaseAndSchema(ctx iris.Context) {
 	valuesAux = append(valuesAux, values...)
 	sc := config.PrestConf.Adapter.Query(sqlSchemaTables, valuesAux...)
 	if sc.Err() != nil {
-		//http.Error(w, sc.Err().Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(sc.Err().Error())
+		ctx.Next()
 		return
 	}
+	//ctx.Header("Content-Type", "application/json")
 	ctx.Write(sc.Bytes())
+	ctx.Header("Content-Type", "application/json")
+	ctx.Next()
 }
 
 // SelectFromTables perform select in database

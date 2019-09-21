@@ -13,6 +13,8 @@ func GetDatabases(ctx iris.Context) {
 	r := ctx.Request()
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -22,6 +24,8 @@ func GetDatabases(ctx iris.Context) {
 	sqlDatabases := fmt.Sprint(query, requestWhere)
 	distinct, err := config.PrestConf.Adapter.DistinctClause(r)
 	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -31,6 +35,8 @@ func GetDatabases(ctx iris.Context) {
 
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -40,6 +46,8 @@ func GetDatabases(ctx iris.Context) {
 
 	page, err := config.PrestConf.Adapter.PaginateIfPossible(r)
 	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
