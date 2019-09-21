@@ -13,7 +13,9 @@ func GetSchemas(ctx iris.Context) {
 	r:= ctx.Request()
 	requestWhere, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
-		//http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
@@ -25,7 +27,9 @@ func GetSchemas(ctx iris.Context) {
 
 	distinct, err := config.PrestConf.Adapter.DistinctClause(r)
 	if err != nil {
-		//http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 	if distinct != "" {
@@ -34,22 +38,29 @@ func GetSchemas(ctx iris.Context) {
 
 	order, err := config.PrestConf.Adapter.OrderByRequest(r)
 	if err != nil {
-		//http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 	order = config.PrestConf.Adapter.SchemaOrderBy(order, hasCount)
 
 	page, err := config.PrestConf.Adapter.PaginateIfPossible(r)
 	if err != nil {
-		//http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
 	sqlSchemas = fmt.Sprint(sqlSchemas, order, " ", page)
 	sc := config.PrestConf.Adapter.Query(sqlSchemas, values...)
 	if sc.Err() != nil {
-		//http.Error(w, sc.Err().Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
+	ctx.Header("Content-Type", "application/json")
 	ctx.Write(sc.Bytes())
 }

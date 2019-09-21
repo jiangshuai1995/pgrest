@@ -67,8 +67,8 @@ func Logs() (customLogger  iris.Handler){
 func FormatMiddleware() iris.Handler{
 	return func(ctx iris.Context) {
 		var result []byte
-		//ctx.ResponseWriter().Header().Set("Content-Type", "application/json")
 		if ctx.GetStatusCode() >= 400 {
+			ctx.ResponseWriter().Header().Set("Content-Type", "application/json")
 			m := make(map[string]string)
 			m["error"] = strings.TrimSpace(string(ctx.Recorder().Body()))
 			result, _ = json.MarshalIndent(m, "", "\t")
