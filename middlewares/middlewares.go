@@ -12,6 +12,7 @@ import (
 	jwtmiddleware "github.com/iris-contrib/middleware/jwt"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
+	"github.com/kataras/iris/middleware/recover"
 	"strings"
 )
 
@@ -77,4 +78,9 @@ func FormatMiddleware() iris.Handler{
 		}
 		//ctx.Next()
 	}
+}
+
+func RecoverMiddleware()(recoverMiddleware iris.Handler){
+	recoverMiddleware = recover.New()
+	return
 }

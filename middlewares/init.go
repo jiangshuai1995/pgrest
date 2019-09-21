@@ -20,6 +20,7 @@ func initApp(){
 	if len(MiddlewareStack) == 0 {
 		MiddlewareStack = append(MiddlewareStack)
 		MiddlewareStack = append(MiddlewareStack,Logs())
+		MiddlewareStack = append(MiddlewareStack,RecoverMiddleware())
 		//if !config.PrestConf.Debug && config.PrestConf.EnableDefaultJWT {
 		//	MiddlewareStack = append(MiddlewareStack, JwtMiddleware(config.PrestConf.JWTKey, config.PrestConf.JWTAlgo))
 		//}
