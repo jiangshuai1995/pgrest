@@ -3,10 +3,8 @@ package controllers
 import (
 	"fmt"
 	"github.com/kataras/iris"
-	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"pgrest/adapters"
 	"pgrest/config"
 )
@@ -259,18 +257,20 @@ func SelectFromTables(ctx iris.Context) {
 }
 
 // InsertInTables perform insert in specific table
-func InsertInTables(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	database := vars["database"]
-	schema := vars["schema"]
-	table := vars["table"]
+func InsertInTables(ctx iris.Context) {
+	r:= ctx.Request()
+	database := ctx.Params().Get("database")
+	schema := ctx.Params().Get("schema")
+	table := ctx.Params().Get("table")
 
 	config.PrestConf.Adapter.SetDatabase(database)
 
 	names, placeholders, values, err := config.PrestConf.Adapter.ParseInsertRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform InsertInTables: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusNotFound)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
@@ -281,29 +281,36 @@ func InsertInTables(w http.ResponseWriter, r *http.Request) {
 		errorMessage := sc.Err().Error()
 		if errorMessage == fmt.Sprintf(`pq: relation "%s.%s" does not exist`, schema, table) {
 			fmt.Println(errorMessage)
-			http.Error(w, errorMessage, http.StatusNotFound)
+			ctx.StatusCode(iris.StatusNotFound)
+			ctx.Recorder().WriteString(errorMessage)
+			ctx.Next()
 			return
 		}
-		http.Error(w, errorMessage, http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusNotFound)
+		ctx.Recorder().WriteString(errorMessage)
+		ctx.Next()
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write(sc.Bytes())
+	ctx.StatusCode(iris.StatusCreated)
+	ctx.Header("Content-Type", "application/json")
+	ctx.Write(sc.Bytes())
 }
 
 // BatchInsertInTables perform insert in specific table from a batch request
-func BatchInsertInTables(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	database := vars["database"]
-	schema := vars["schema"]
-	table := vars["table"]
+func BatchInsertInTables(ctx iris.Context) {
+	r:= ctx.Request()
+	database := ctx.Params().Get("database")
+	schema := ctx.Params().Get("database")
+	table := ctx.Params().Get("database")
 
 	config.PrestConf.Adapter.SetDatabase(database)
 
 	names, placeholders, values, err := config.PrestConf.Adapter.ParseBatchInsertRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform BatchInsertInTables: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 	var sc adapters.Scanner
@@ -318,29 +325,36 @@ func BatchInsertInTables(w http.ResponseWriter, r *http.Request) {
 		errorMessage := sc.Err().Error()
 		if errorMessage == fmt.Sprintf(`pq: relation "%s.%s" does not exist`, schema, table) {
 			fmt.Println(errorMessage)
-			http.Error(w, errorMessage, http.StatusNotFound)
+			ctx.StatusCode(iris.StatusNotFound)
+			ctx.Recorder().WriteString(err.Error())
+			ctx.Next()
 			return
 		}
-		http.Error(w, errorMessage, http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write(sc.Bytes())
+	ctx.StatusCode(iris.StatusCreated)
+	ctx.Header("Content-Type", "application/json")
+	ctx.Write(sc.Bytes())
 }
 
 // DeleteFromTable perform delete sql
-func DeleteFromTable(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	database := vars["database"]
-	schema := vars["schema"]
-	table := vars["table"]
+func DeleteFromTable(ctx iris.Context) {
+	r:= ctx.Request()
+	database := ctx.Params().Get("database")
+	schema := ctx.Params().Get("database")
+	table := ctx.Params().Get("database")
 
 	config.PrestConf.Adapter.SetDatabase(database)
 
 	where, values, err := config.PrestConf.Adapter.WhereByRequest(r, 1)
 	if err != nil {
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
@@ -352,7 +366,9 @@ func DeleteFromTable(w http.ResponseWriter, r *http.Request) {
 	returningSyntax, err := config.PrestConf.Adapter.ReturningByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform ReturningByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
@@ -368,28 +384,35 @@ func DeleteFromTable(w http.ResponseWriter, r *http.Request) {
 		errorMessage := sc.Err().Error()
 		if errorMessage == fmt.Sprintf(`pq: relation "%s.%s" does not exist`, schema, table) {
 			fmt.Println(errorMessage)
-			http.Error(w, errorMessage, http.StatusNotFound)
+			ctx.StatusCode(iris.StatusNotFound)
+			ctx.Recorder().WriteString(err.Error())
+			ctx.Next()
 			return
 		}
-		http.Error(w, errorMessage, http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
-	w.Write(sc.Bytes())
+	ctx.Header("Content-Type", "application/json")
+	ctx.Write(sc.Bytes())
 }
 
 // UpdateTable perform update table
-func UpdateTable(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	database := vars["database"]
-	schema := vars["schema"]
-	table := vars["table"]
+func UpdateTable(ctx iris.Context) {
+	r:= ctx.Request()
+	database := ctx.Params().Get("database")
+	schema := ctx.Params().Get("database")
+	table := ctx.Params().Get("database")
 
 	config.PrestConf.Adapter.SetDatabase(database)
 
 	setSyntax, values, err := config.PrestConf.Adapter.SetByRequest(r, 1)
 	if err != nil {
 		err = fmt.Errorf("could not perform UPDATE: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 	sql := config.PrestConf.Adapter.UpdateSQL(database, schema, table, setSyntax)
@@ -399,7 +422,9 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	where, whereValues, err := config.PrestConf.Adapter.WhereByRequest(r, pid)
 	if err != nil {
 		err = fmt.Errorf("could not perform WhereByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
@@ -414,7 +439,9 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	returningSyntax, err := config.PrestConf.Adapter.ReturningByRequest(r)
 	if err != nil {
 		err = fmt.Errorf("could not perform ReturningByRequest: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
 
@@ -430,11 +457,16 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 		errorMessage := sc.Err().Error()
 		if errorMessage == fmt.Sprintf(`pq: relation "%s.%s" does not exist`, schema, table) {
 			fmt.Println(errorMessage)
-			http.Error(w, errorMessage, http.StatusNotFound)
+			ctx.StatusCode(iris.StatusNotFound)
+			ctx.Recorder().WriteString(err.Error())
+			ctx.Next()
 			return
 		}
-		http.Error(w, errorMessage, http.StatusBadRequest)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Recorder().WriteString(err.Error())
+		ctx.Next()
 		return
 	}
-	w.Write(sc.Bytes())
+	ctx.Header("Content-Type", "application/json")
+	ctx.Write(sc.Bytes())
 }
